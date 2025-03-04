@@ -28,10 +28,9 @@ jobs:
       - name: Push Image to Docker Hub
         run: docker push mickeydoe/projecttwo_front-end:latest
 
-    # 📧 SUCCESS EMAIL NOTIFICATION
-    if: success()
-    steps:
+      # 📧 SUCCESS EMAIL NOTIFICATION
       - name: Send Email on Success
+        if: success()
         uses: mattnotmitt/mailer@v3.0.0
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
@@ -43,10 +42,9 @@ jobs:
           from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
           to: ${{ secrets.EMAIL_TO }}
 
-    # 📧 FAILURE EMAIL NOTIFICATION
-    if: failure()
-    steps:
+      # 📧 FAILURE EMAIL NOTIFICATION
       - name: Send Email on Failure
+        if: failure()
         uses: mattnotmitt/mailer@v3.0.0
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
