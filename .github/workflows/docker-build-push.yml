@@ -27,3 +27,33 @@ jobs:
 
       - name: Push Image to Docker Hub
         run: docker push mickeydoe/projecttwo_front-end:latest
+
+    # 📧 SUCCESS EMAIL NOTIFICATION
+    if: success()
+    steps:
+      - name: Send Email on Success
+        uses: mattnotmitt/mailer@v3.0.0
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "✅ SUCCESS: Docker Image Built & Pushed!"
+          body: "Hello,\n\nThe frontend Docker image has been successfully built and pushed to Docker Hub.\n\nRepository: mickeydoe/projecttwo_front-end\n\nBest,\nGitHub Actions"
+          from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
+          to: ${{ secrets.EMAIL_TO }}
+
+    # 📧 FAILURE EMAIL NOTIFICATION
+    if: failure()
+    steps:
+      - name: Send Email on Failure
+        uses: mattnotmitt/mailer@v3.0.0
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ FAILURE: Docker Build Failed!"
+          body: "Hello,\n\nThe frontend Docker build has FAILED. Please check the logs in GitHub Actions.\n\nBest,\nGitHub Actions"
+          from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
+          to: ${{ secrets.EMAIL_TO }}
