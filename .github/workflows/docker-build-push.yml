@@ -3,7 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - main  # Change if using a different branch
+      - main
 
 jobs:
   build-and-push:
@@ -18,7 +18,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
+      
       - name: Debug - List Files
         run: ls -R  # Print all files in runner
 
@@ -28,30 +28,39 @@ jobs:
       - name: Push Image to Docker Hub
         run: docker push mickeydoe/projecttwo_front-end:latest
 
-      # 📧 SUCCESS EMAIL NOTIFICATION
-      - name: Send Email on Success
-        if: success()
-        uses: docker://bytemark/smtp
+  # 📧 SUCCESS EMAIL NOTIFICATION
+  success-email:
+    needs: build-and-push
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Success Email
+        uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: "✅ SUCCESS: Docker Image Built & Pushed!"
-          body: "Hello,\n\nThe frontend Docker image has been successfully built and pushed to Docker Hub.\n\nRepository: mickeydoe/projecttwo_front-end\n\nBest,\nGitHub Actions"
-          from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
+          body: "The frontend Docker image has been successfully built and pushed to Docker Hub.\n\nRepository: mickeydoe/projecttwo_front-end"
           to: ${{ secrets.EMAIL_TO }}
+          from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
 
-      # 📧 FAILURE EMAIL NOTIFICATION
-      - name: Send Email on Failure
-        if: failure()
-        uses: docker://bytemark/smtp
+  # 📧 FAILURE EMAIL NOTIFICATION
+  failure-email:
+    needs: build-and-push
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Failure Email
+        uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: "❌ FAILURE: Docker Build Failed!"
-          body: "Hello,\n\nThe frontend Docker build has FAILED. Please check the logs in GitHub Actions.\n\nBest,\nGitHub Actions"
-          from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
+          body: "The frontend Docker build has FAILED. Please check the logs in GitHub Actions."
           to: ${{ secrets.EMAIL_TO }}
+          from: "GitHub Actions <${{ secrets.SMTP_USERNAME }}>"
+
