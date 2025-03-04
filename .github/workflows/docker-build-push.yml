@@ -1,0 +1,26 @@
+name: Build and Push Frontend to Docker Hub
+
+on:
+  push:
+    branches:
+      - main  # Change this if your main branch has a different name
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build Frontend Docker Image
+        run: docker build -t mickeydoe/projecttwo_front-end:latest ./front-end
+
+      - name: Push Image to Docker Hub
+        run: docker push mickeydoe/projecttwo_front-end:latest
