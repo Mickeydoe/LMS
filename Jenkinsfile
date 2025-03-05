@@ -10,7 +10,11 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/Mickeydoe/LMS.git'
+                checkout scmGit(
+                    branches: [[name: '*/main']], 
+                    extensions: [cloneOption(noTags: false, reference: '', shallow: false, timeout: 30)], 
+                    userRemoteConfigs: [[url: 'https://github.com/Mickeydoe/LMS.git']]
+                )
             }
         }
 
