@@ -3,16 +3,29 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'mickeydoe/projecttwo_backend:latest'
-        DOCKER_HUB_USERNAME = credentials('docker-username')  // Store DockerHub credentials in Jenkins
+        DOCKER_HUB_USERNAME = credentials('docker-username')  
         DOCKER_HUB_PASSWORD = credentials('docker-password')
     }
 
     stages {
+        stage('Cleanup Workspace') {
+            steps {
+                deleteDir()  // Delete previous files to avoid corruption
+            }
+        }
+
+        stage('Prepare Git') {
+            steps {
+                sh 'git config --global http.postBuffer 524288000'
+                sh 'git config --global core.compression 0'
+            }
+        }
+
         stage('Clone Repository') {
             steps {
                 checkout scmGit(
                     branches: [[name: '*/main']], 
-                    extensions: [cloneOption(noTags: false, reference: '', shallow: false, timeout: 30)], 
+                    extensions: [cloneOption(shallow: true, depth: 1, timeout: 120)],  
                     userRemoteConfigs: [[url: 'https://github.com/Mickeydoe/LMS.git']]
                 )
             }
