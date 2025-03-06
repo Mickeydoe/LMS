@@ -2,52 +2,58 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'mickeydoe/projecttwo_backend:latest'
-        DOCKER_HUB_USERNAME = credentials('docker-username')  
-        DOCKER_HUB_PASSWORD = credentials('docker-password')
+        GITHUB_PAT = credentials('GITHUB_PAT')  // Fetch from Jenkins credentials
+        GITHUB_USERNAME = 'mickeydoe' // Your GitHub username
+        IMAGE_NAME = 'projecttwo_back-end' // Your correct Docker image name
     }
 
     stages {
-        stage('Cleanup Workspace') {
+        stage('Checkout Code') {
             steps {
-                deleteDir()  // Delete previous files to avoid corruption
-            }
-        }
-
-        stage('Prepare Git') {
-            steps {
-                sh 'git config --global http.postBuffer 524288000'
-                sh 'git config --global core.compression 0'
-            }
-        }
-
-        stage('Clone Repository') {
-            steps {
-                checkout scmGit(
-                    branches: [[name: '*/main']], 
-                    extensions: [cloneOption(shallow: true, depth: 1, timeout: 120)],  
-                    userRemoteConfigs: [[url: 'https://github.com/Mickeydoe/LMS.git']]
-                )
+                script {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],  // Adjust if using another branch
+                        userRemoteConfigs: [[
+                            url: "https://github.com/${env.GITHUB_USERNAME}/LMS.git",
+                            credentialsId: 'GITHUB_PAT'
+                        ]]
+                    ])
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                script {
+                    sh "docker build -t ${env.IMAGE_NAME}:latest ."
+                }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push Docker Image') {
             steps {
-                sh 'echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin'
-                sh 'docker push $DOCKER_IMAGE'
+                script {
+                    sh "echo ${env.GITHUB_PAT} | docker login ghcr.io -u ${env.GITHUB_USERNAME} --password-stdin"
+                    sh "docker tag ${env.IMAGE_NAME}:latest ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
+                    sh "docker push ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
+                }
             }
         }
 
-        stage('Deploy Backend') {
+        stage('Deploy') {
             steps {
-                sh 'docker-compose up -d'
+                echo "Deployment steps can be added here"
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check logs for details."
         }
     }
 }
