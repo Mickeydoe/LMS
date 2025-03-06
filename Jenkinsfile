@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                     dir('/var/lib/jenkins/workspace/Laravel-Backend-CI-CD') {
-                        sh 'rm -rf * || true'  // Ensure a clean workspace before cloning
+                        sh 'rm -rf * || true'
                     }
                 }
             }
@@ -22,7 +22,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 script {
-                    timeout(time: 10, unit: 'MINUTES') {  // Set a 10-minute timeout for cloning
+                    timeout(time: 10, unit: 'MINUTES') {
                         checkout([
                             $class: 'GitSCM',
                             branches: [[name: "*/${env.GIT_BRANCH}"]],
@@ -49,11 +49,8 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Use withCredentials to securely retrieve the GitHub PAT
                     withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'TOKEN')]) {
                         sh 'echo $TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin'
-                        
-                        // Tag and push the Docker image
                         sh "docker tag ${env.IMAGE_NAME}:latest ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
                         sh "docker push ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
                     }
