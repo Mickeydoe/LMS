@@ -13,7 +13,10 @@ pipeline {
         stage('Cleanup Workspace') {
             steps {
                 script {
-                    sh 'rm -rf * || true'  // Ensure a clean workspace before cloning
+                    // Navigate to the root directory and clean up
+                    dir('/var/lib/jenkins/workspace/Laravel-Backend-CI-CD') {
+                        sh 'rm -rf * || true'  // Ensure a clean workspace before cloning
+                    }
                 }
             }
         }
@@ -38,7 +41,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${env.IMAGE_NAME}:latest ."
+                    // Navigate to the back-end folder and build the Docker image
+                    dir('back-end') {
+                        sh "DOCKER_BUILDKIT=1 docker build -t ${env.IMAGE_NAME}:latest ."
+                    }
                 }
             }
         }
@@ -46,7 +52,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Log in to GitHub Container Registry (GHCR)
                     sh "echo ${env.GITHUB_PAT} | docker login ghcr.io -u ${env.GITHUB_USERNAME} --password-stdin"
+                    
+                    // Tag and push the Docker image
                     sh "docker tag ${env.IMAGE_NAME}:latest ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
                     sh "docker push ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
                 }
