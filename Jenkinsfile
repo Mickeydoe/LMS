@@ -21,7 +21,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 script {
-                    timeout(time: , unit: 'MINUTES') {  // Set a 10-minute timeout for cloning
+                    timeout(time: 10, unit: 'MINUTES') {  // Set a 10-minute timeout for cloning
                         checkout([
                             $class: 'GitSCM',
                             branches: [[name: "*/${env.GIT_BRANCH}"]],
