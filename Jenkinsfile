@@ -43,7 +43,7 @@ pipeline {
                 script {
                     // Navigate to the back-end folder and build the Docker image
                     dir('back-end') {
-                        sh "DOCKER_BUILDKIT=1 docker build -t ${env.IMAGE_NAME}:latest ."
+                        sh "DOCKER_BUILDKIT=0 docker build -t ${env.IMAGE_NAME}:latest ."
                     }
                 }
             }
