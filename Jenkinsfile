@@ -3,22 +3,34 @@ pipeline {
 
     environment {
         GITHUB_PAT = credentials('GITHUB_PAT')  // Fetch from Jenkins credentials
-        GITHUB_USERNAME = 'mickeydoe' // Your GitHub username
-        IMAGE_NAME = 'projecttwo_back-end' // Your correct Docker image name
+        GITHUB_USERNAME = 'mickeydoe' // GitHub username
+        IMAGE_NAME = 'projecttwo_back-end' // Docker image name
+        GIT_REPO_URL = "https://github.com/${env.GITHUB_USERNAME}/LMS.git"
+        GIT_BRANCH = 'main' 
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Cleanup Workspace') {
             steps {
                 script {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],  // Adjust if using another branch
-                        userRemoteConfigs: [[
-                            url: "https://github.com/${env.GITHUB_USERNAME}/LMS.git",
-                            credentialsId: 'GITHUB_PAT'
-                        ]]
-                    ])
+                    sh 'rm -rf * || true'  // Ensure a clean workspace before cloning
+                }
+            }
+        }
+
+        stage('Clone Repository') {
+            steps {
+                script {
+                    timeout(time: , unit: 'MINUTES') {  // Set a 10-minute timeout for cloning
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "*/${env.GIT_BRANCH}"]],
+                            userRemoteConfigs: [[
+                                url: env.GIT_REPO_URL,
+                                credentialsId: 'GITHUB_PAT'
+                            ]]
+                        ])
+                    }
                 }
             }
         }

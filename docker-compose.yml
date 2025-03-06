@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  mysql_db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - project_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  back-end:  # ✅ Correct service name
+    build: ./back-end
+    container_name: laravel_backend
+    restart: always
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    environment:
+      APP_KEY: base64:randomGeneratedKey
+      DB_CONNECTION: mysql
+      DB_HOST: mysql_db
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: user
+      DB_PASSWORD: password
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./back-end:/var/www/html
+    command: sh -c "sleep 10 && php artisan migrate && php artisan db:seed && php artisan serve --host=0.0.0.0 --port=8000"
+    networks:
+      - project_network
+
+  front-end:
+    build: ./front-end
+    container_name: nextjs_frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://laravel_backend:8000  
+      SECRET_COOKIE_PASSWORD: okp2oJszqs/cgn+NQhIQ+Q9JCMHHUG/yVgHnqP09u2k=
+
+    ports:
+      - "3000:3000"
+    depends_on:
+      - back-end
+    networks:
+      - project_network
+
+volumes:
+  mysql_data:
+
+networks:
+  project_network:
+    driver: bridge
