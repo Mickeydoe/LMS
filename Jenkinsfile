@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_PAT = credentials('GITHUB_PAT')  // Fetch from Jenkins credentials
         GITHUB_USERNAME = 'mickeydoe' // GitHub username
         IMAGE_NAME = 'projecttwo_back-end' // Docker image name
         GIT_REPO_URL = "https://github.com/${env.GITHUB_USERNAME}/LMS.git"
@@ -13,7 +12,6 @@ pipeline {
         stage('Cleanup Workspace') {
             steps {
                 script {
-                    // Navigate to the root directory and clean up
                     dir('/var/lib/jenkins/workspace/Laravel-Backend-CI-CD') {
                         sh 'rm -rf * || true'  // Ensure a clean workspace before cloning
                     }
@@ -41,7 +39,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Navigate to the back-end folder and build the Docker image
                     dir('back-end') {
                         sh "DOCKER_BUILDKIT=0 docker build -t ${env.IMAGE_NAME}:latest ."
                     }
@@ -52,12 +49,14 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Log in to GitHub Container Registry (GHCR)
-                    sh "echo ${env.GITHUB_PAT} | docker login ghcr.io -u ${env.GITHUB_USERNAME} --password-stdin"
-                    
-                    // Tag and push the Docker image
-                    sh "docker tag ${env.IMAGE_NAME}:latest ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
-                    sh "docker push ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
+                    // Use withCredentials to securely retrieve the GitHub PAT
+                    withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'TOKEN')]) {
+                        sh 'echo $TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin'
+                        
+                        // Tag and push the Docker image
+                        sh "docker tag ${env.IMAGE_NAME}:latest ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
+                        sh "docker push ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
+                    }
                 }
             }
         }
