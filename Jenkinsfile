@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_USERNAME = 'mickeydoe' // GitHub username
+        DOCKERHUB_USERNAME = 'mickeydoe' //  Docker Hub username
         IMAGE_NAME = 'projecttwo_back-end' // Docker image name
+        GITHUB_USERNAME = 'mickeydoe' // GitHub username
         GIT_REPO_URL = "https://github.com/${env.GITHUB_USERNAME}/LMS.git"
         GIT_BRANCH = 'main' 
     }
@@ -46,13 +47,13 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'TOKEN')]) {
-                        sh 'echo $TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin'
-                        sh "docker tag ${env.IMAGE_NAME}:latest ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
-                        sh "docker push ghcr.io/${env.GITHUB_USERNAME}/${env.IMAGE_NAME}:latest"
+                    withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh "docker tag ${IMAGE_NAME}:latest $DOCKER_USER/${IMAGE_NAME}:latest"
+                        sh "docker push $DOCKER_USER/${IMAGE_NAME}:latest"
                     }
                 }
             }
