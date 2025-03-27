@@ -28,10 +28,10 @@ COPY --from=builder /app/public ./public
 
 # Set environment variables
 ENV SECRET_COOKIE_PASSWORD=${SECRET_COOKIE_PASSWORD}
-ENV PORT=3000
+ENV PORT=3050
 
 # Expose the correct port
-EXPOSE 3000
+EXPOSE 3050
 
 # Start Next.js correctly
 CMD ["npm", "run", "start"]
